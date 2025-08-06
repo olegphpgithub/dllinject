@@ -18,7 +18,12 @@ bool InjectDLL(DWORD pid, const char* dllPath) {
     if (!WriteProcessMemory(hProcess, allocAddr, dllPath, strlen(dllPath) + 1, NULL))
         return false;
 
-    LPVOID loadLibraryAddr = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+	HMODULE hModule = GetModuleHandleA("kernel32.dll");
+	if (hModule == NULL) {
+		return false;
+	}
+
+    LPVOID loadLibraryAddr = GetProcAddress(hModule, "LoadLibraryA");
     if (!loadLibraryAddr) return false;
 
     HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0,
@@ -33,6 +38,8 @@ bool InjectDLL(DWORD pid, const char* dllPath) {
     CloseHandle(hProcess);
     return true;
 }
+
+
 int main()
 {
     DWORD pid;
