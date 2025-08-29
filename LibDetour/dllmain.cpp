@@ -25,7 +25,7 @@ VOID WINAPI HookedGetSystemTime(LPSYSTEMTIME lpSystemTime) {
 }
 
 extern "C" __declspec(dllexport) void DummyExport(const char* dllPath) {
-	printf("From Dll: %s", dllPath);
+	printf("From Dll: %s\n", dllPath);
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,

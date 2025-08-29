@@ -7,6 +7,8 @@
 #include <tlhelp32.h>
 #include <tchar.h>
 
+#include "CommandLineParser.h"
+
 bool InjectDLL(DWORD pid, const char* dllPath) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (!hProcess) return false;
@@ -120,11 +122,20 @@ bool PassParameter2(DWORD pid, const char* dllPath)
 	return true;
 }
 
-int main() {
+
+int main(int argc, char *argv[]) {
+
+    CommandLineParser parser;
+    if (!parser.Parse(argc, argv))
+    {
+        exit(1);
+    }
+
     STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
 
-    LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
+    // LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
+    LPCSTR appPath = parser.target_application.c_str();
 
     BOOL success = CreateProcessA(
         appPath,          

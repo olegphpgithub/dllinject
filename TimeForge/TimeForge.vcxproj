@@ -127,7 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CommandLineParser.cpp" />
+    <ClCompile Include="getopt.c" />
+    <ClCompile Include="SafeSystemTime.cpp" />
     <ClCompile Include="TimeForge.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CommandLineParser.h" />
+    <ClInclude Include="getopt.h" />
+    <ClInclude Include="SafeSystemTime.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
