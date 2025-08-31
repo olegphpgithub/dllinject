@@ -14,6 +14,8 @@ public:
     WORD wSecond;
     WORD wMilliseconds;
 
+    SYSTEMTIME m_time;
+
     std::string target_application;
     std::string target_datetime;
     bool Parse(int argc, char* argv[]);

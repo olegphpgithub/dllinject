@@ -9,6 +9,8 @@
 
 #include "CommandLineParser.h"
 
+CommandLineParser parser;
+
 bool InjectDLL(DWORD pid, const char* dllPath) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (!hProcess) return false;
@@ -98,17 +100,25 @@ bool PassParameter2(DWORD pid, const char* dllPath)
 
     // 2. Вычисляем RVA (смещение) экспортируемой функции Init
     HMODULE hLocalDLL = LoadLibraryA(dllPath); // Загрузить локально для анализа
-    FARPROC pInitLocal = GetProcAddress(hLocalDLL, "DummyExport");
+    FARPROC pInitLocal = GetProcAddress(hLocalDLL, "AssignSystemTime");
 
     DWORD_PTR offset = (DWORD_PTR)pInitLocal - (DWORD_PTR)hLocalDLL;
     DWORD_PTR remoteInit = (DWORD_PTR)injectedBase + offset;
 
     FreeLibrary(hLocalDLL); // больше не нужен
 
-	const char* param = "some important data";
-	LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, strlen(param) + 1, MEM_COMMIT, PAGE_READWRITE);
-	if (remoteMem == NULL) return false;
-	WriteProcessMemory(hProcess, remoteMem, param, strlen(param) + 1, NULL);
+	//const char* param = "some important data";
+	//LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, strlen(param) + 1, MEM_COMMIT, PAGE_READWRITE);
+	//if (remoteMem == NULL) return false;
+
+    std::cout << "Before pass parameter:" << parser.m_time.wYear << std::endl;
+    std::cout << "sizeof(parser.m_time)" << sizeof(parser.m_time) << std::endl;
+    std::cout << "sizeof(_SYSTEMTIME)" << sizeof(_SYSTEMTIME) << std::endl;
+    std::cout << "sizeof(SYSTEMTIME)" << sizeof(SYSTEMTIME) << std::endl;
+    LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, sizeof(parser.m_time), MEM_COMMIT, PAGE_READWRITE);
+    if (remoteMem == NULL) return false;
+
+	WriteProcessMemory(hProcess, remoteMem, &(parser.m_time), sizeof(parser.m_time), NULL);
 
     // 4. Вызываем функцию Init с параметром
     HANDLE hInitThread = CreateRemoteThread(hProcess, NULL, 0,
@@ -122,10 +132,8 @@ bool PassParameter2(DWORD pid, const char* dllPath)
 	return true;
 }
 
-
 int main(int argc, char *argv[]) {
 
-    CommandLineParser parser;
     if (!parser.Parse(argc, argv))
     {
         exit(1);

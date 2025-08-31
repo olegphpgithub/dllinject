@@ -13,3 +13,13 @@ SafeSystemTime::SafeSystemTime(WORD year, WORD month, WORD day,
     m_time.wSecond = second;
     m_time.wMilliseconds = milliseconds;
 }
+
+bool SafeSystemTime::isValid() const {
+    FILETIME ft;
+    return SystemTimeToFileTime(&m_time, &ft);
+}
+
+SYSTEMTIME SafeSystemTime::getSystemTime()
+{
+    return m_time;
+}

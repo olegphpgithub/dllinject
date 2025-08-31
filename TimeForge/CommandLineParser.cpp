@@ -81,6 +81,8 @@ bool CommandLineParser::ValidateArguments()
                 if (!sst.isValid()) {
                     throw std::exception("DateTime is invalid.");
                 }
+
+                m_time = sst.getSystemTime();
             }
             else {
                 throw std::exception("String doesn't match regex 0000-00-00T00:00:00.");
