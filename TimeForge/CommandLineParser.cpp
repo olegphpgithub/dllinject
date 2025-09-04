@@ -12,16 +12,52 @@
 #endif
 
 #include "getopt.h"
+#include "CLI11.hpp"
 
 bool CommandLineParser::Parse(int argc, char* argv[])
 {
-    const char* const short_opts = "a:d:";
+    CLI::App app{"Example with CLI11"};
+    app.allow_extras();
+
+    app.add_flag("--datetime", target_datetime, "Datetime");
+    app.add_flag("--application", target_application, "Application");
+    bool parameters_mode = false;
+    app.add_flag("--parameters", parameters_mode, "Parameters");
+
+    CLI11_PARSE(app, argc, argv);
+
+    std::vector<std::string> names;
+    if (parameters_mode) {
+        for (auto &arg : app.remaining()) {
+            names.push_back(arg);
+        }
+    }
+
+    std::cout << "App1908:" << target_application << "\n";
+
+    std::stringstream command_line_stream;
+    std::string delimiter("");
+    std::string border("");
+    for (const std::string &n : names) {
+        delimiter = command_line_stream.str().empty() ? "" : " ";
+        border = n.find(' ') != std::string::npos ? "\"" : "";
+        command_line_stream << delimiter << border << n << border;
+    }
+    command_line = command_line_stream.str();
+
+    std::cout << "cl:" << command_line << "\n";
+
+    /*
+    const char* const short_opts = "a:p:d:";
     const option long_opts[] = {
             {"application", required_argument, nullptr, 'a'},
+            {"parameter", required_argument, nullptr, 'p'},
             {"datetime", required_argument, nullptr, 'd'},
             {"help", no_argument, nullptr, 'h'},
             {nullptr, no_argument, nullptr, 0}
     };
+
+    std::ostringstream command_line_stream;
 
     while (true)
     {
@@ -31,10 +67,27 @@ bool CommandLineParser::Parse(int argc, char* argv[])
             break;
         }
 
+        std::string border("");
+
         switch (opt)
         {
         case 'a':
             target_application = std::string(optarg);
+            break;
+
+        case 'p':
+            if (!command_line_stream.str().empty()) {
+                command_line_stream << " ";
+            }
+
+            if (strchr(optarg, ' ')) {
+                border = "\"";
+            }
+            else {
+                border = "";
+            }
+
+            command_line_stream << border << std::string(optarg) << border;
             break;
 
         case 'd':
@@ -48,11 +101,16 @@ bool CommandLineParser::Parse(int argc, char* argv[])
             return false;
         }
     }
+    command_line = command_line_stream.str();
+    */
+
     return ValidateArguments();
 }
 
 bool CommandLineParser::ValidateArguments()
 {
+    std::cout << "command_line:" << command_line.c_str() << std::endl;
+
     if (target_application.empty() || target_datetime.empty()) {
         PrintHelp();
         return false;

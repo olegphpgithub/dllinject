@@ -8,6 +8,7 @@
 #include <tchar.h>
 
 #include "CommandLineParser.h"
+#include "CLI11.hpp"
 
 CommandLineParser parser;
 
@@ -143,19 +144,30 @@ int main(int argc, char *argv[]) {
     PROCESS_INFORMATION pi = {};
 
     // LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
+
+    std::stringstream cmdlinestream;
+
+    std::string border = parser.target_application.find(' ') != std::string::npos ? "\"" : "";
+    cmdlinestream << border << parser.target_application << border << " " << parser.command_line;
+    std::string cmdlinestr = cmdlinestream.str();
+
     LPCSTR appPath = parser.target_application.c_str();
+    char *cmd = NULL;
+    cmd = new char[cmdlinestr.length() + 1];
+    strncpy_s(cmd, cmdlinestr.length() + 1, cmdlinestr.c_str(), cmdlinestr.length());
+    cmd[cmdlinestr.length()] = 0;
 
     BOOL success = CreateProcessA(
-        appPath,          
-        NULL,             
-        NULL,             
-        NULL,             
-        FALSE,            
-        CREATE_SUSPENDED, 
-        NULL,             
-        NULL,             
-        &si,              
-        &pi               
+        appPath,
+        cmd,
+        NULL,
+        NULL,
+        FALSE,
+        CREATE_SUSPENDED,
+        NULL,
+        NULL,
+        &si,
+        &pi
     );
 
     if (!success) {

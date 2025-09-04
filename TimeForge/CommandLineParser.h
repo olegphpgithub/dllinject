@@ -17,6 +17,7 @@ public:
     SYSTEMTIME m_time;
 
     std::string target_application;
+    std::string command_line;
     std::string target_datetime;
     bool Parse(int argc, char* argv[]);
     bool ValidateArguments();
