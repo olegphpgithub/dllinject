@@ -12,20 +12,17 @@
 SYSTEMTIME spurious_systime;
 
 static VOID (WINAPI* TrueGetSystemTime)(LPSYSTEMTIME) = GetSystemTime;
+static VOID (WINAPI* TrueGetSystemTimeAsFileTime)(LPFILETIME) = GetSystemTimeAsFileTime;
 
 typedef VOID (WINAPI* GetSystemTime_t)(LPSYSTEMTIME);
 GetSystemTime_t OriginalGetSystemTime = NULL;
 
 VOID WINAPI HookedGetSystemTime(LPSYSTEMTIME lpSystemTime) {
     *lpSystemTime = spurious_systime;
-    
-    //lpSystemTime->wYear = spurious_systime.wYear;
-    //lpSystemTime->wMonth = spurious_systime.wMonth;
-    //lpSystemTime->wDay = spurious_systime.wDay;
-    //lpSystemTime->wHour = 12;
-    //lpSystemTime->wMinute = 0;
-    //lpSystemTime->wSecond = 0;
-    //lpSystemTime->wMilliseconds = 0;
+}
+
+VOID WINAPI HookedGetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime) {
+    SystemTimeToFileTime(&spurious_systime, lpSystemTimeAsFileTime);
 }
 
 extern "C" __declspec(dllexport) void AssignSystemTime(const SYSTEMTIME *systime) {
@@ -46,6 +43,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
         DetourAttach(&(PVOID&)TrueGetSystemTime, HookedGetSystemTime);
+        DetourAttach(&(PVOID&)TrueGetSystemTimeAsFileTime, HookedGetSystemTimeAsFileTime);
         DetourTransactionCommit();
     }
     else if (ul_reason_for_call == DLL_PROCESS_DETACH)
@@ -53,6 +51,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
         DetourDetach(&(PVOID&)TrueGetSystemTime, HookedGetSystemTime);
+        DetourDetach(&(PVOID&)TrueGetSystemTimeAsFileTime, HookedGetSystemTimeAsFileTime);
         DetourTransactionCommit();
     }
     return TRUE;
