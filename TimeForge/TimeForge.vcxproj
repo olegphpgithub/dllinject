@@ -128,12 +128,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommandLineParser.cpp" />
+    <ClCompile Include="ResourceFile.cpp" />
     <ClCompile Include="SafeSystemTime.cpp" />
     <ClCompile Include="TimeForge.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommandLineParser.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ResourceFile.h" />
     <ClInclude Include="SafeSystemTime.h" />
   </ItemGroup>
   <ItemGroup>

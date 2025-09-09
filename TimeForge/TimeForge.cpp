@@ -2,13 +2,14 @@
 //
 
 #include <iostream>
+#include <sstream>
 #include <Windows.h>
 #include <Psapi.h>
 #include <tlhelp32.h>
 #include <tchar.h>
 
 #include "CommandLineParser.h"
-#include "CLI11.hpp"
+#include "ResourceFile.h"
 
 CommandLineParser parser;
 
@@ -100,69 +101,79 @@ bool PassParameter(DWORD pid, const char* dllPath)
 
 int main(int argc, char *argv[]) {
 
-    if (!parser.Parse(argc, argv))
-    {
-        exit(1);
+    try {
+        if (!parser.Parse(argc, argv))
+        {
+            exit(1);
+        }
+
+        STARTUPINFOA si = { sizeof(si) };
+        PROCESS_INFORMATION pi = {};
+
+        // LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
+
+        std::stringstream cmdlinestream;
+
+        std::string border = parser.target_application.find(' ') != std::string::npos ? "\"" : "";
+        cmdlinestream << border << parser.target_application << border << " " << parser.command_line;
+        std::string cmdlinestr = cmdlinestream.str();
+
+        LPCSTR appPath = parser.target_application.c_str();
+        char* cmd = NULL;
+        cmd = new char[cmdlinestr.length() + 1];
+        strncpy_s(cmd, cmdlinestr.length() + 1, cmdlinestr.c_str(), cmdlinestr.length());
+        cmd[cmdlinestr.length()] = 0;
+
+        BOOL success = CreateProcessA(
+            appPath,
+            cmd,
+            NULL,
+            NULL,
+            FALSE,
+            CREATE_SUSPENDED,
+            NULL,
+            NULL,
+            &si,
+            &pi
+        );
+
+        if (!success) {
+            std::cerr << "CreateProcess failed. Error: " << GetLastError() << std::endl;
+            return 1;
+        }
+
+        std::cout << "Process has been launched in sus (PID: " << pi.dwProcessId << ")\n";
+
+        ResourceFile Dll;
+
+        // if (InjectDLL(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
+        if (InjectDLL(pi.dwProcessId, Dll.file_path.c_str())) {
+            std::cout << "DLL successfully injected!\n";
+        }
+        else {
+            std::cout << "Injection failed.\n";
+        }
+
+        // if (PassParameter(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
+        if (PassParameter(pi.dwProcessId, Dll.file_path.c_str())) {
+            std::cout << "DLL passed ok\n";
+        }
+        else {
+            std::cout << "DLL passed fail\n";
+        }
+
+        ResumeThread(pi.hThread);
+
+        std::cout << "Proc resumed.\n";
+
+        DWORD dw = WaitForSingleObject(pi.hProcess, INFINITE);
+
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
     }
-
-    STARTUPINFOA si = { sizeof(si) };
-    PROCESS_INFORMATION pi = {};
-
-    // LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
-
-    std::stringstream cmdlinestream;
-
-    std::string border = parser.target_application.find(' ') != std::string::npos ? "\"" : "";
-    cmdlinestream << border << parser.target_application << border << " " << parser.command_line;
-    std::string cmdlinestr = cmdlinestream.str();
-
-    LPCSTR appPath = parser.target_application.c_str();
-    char *cmd = NULL;
-    cmd = new char[cmdlinestr.length() + 1];
-    strncpy_s(cmd, cmdlinestr.length() + 1, cmdlinestr.c_str(), cmdlinestr.length());
-    cmd[cmdlinestr.length()] = 0;
-
-    BOOL success = CreateProcessA(
-        appPath,
-        cmd,
-        NULL,
-        NULL,
-        FALSE,
-        CREATE_SUSPENDED,
-        NULL,
-        NULL,
-        &si,
-        &pi
-    );
-
-    if (!success) {
-        std::cerr << "CreateProcess failed. Error: " << GetLastError() << std::endl;
+    catch (std::exception ex) {
+        std::cout << ex.what() << std::endl;
         return 1;
     }
-
-    std::cout << "Process has been launched in sus (PID: " << pi.dwProcessId << ")\n";
-
-
-    if (InjectDLL(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll"))
-        std::cout << "DLL successfully injected!\n";
-    else
-        std::cout << "Injection failed.\n";
-
-	if (PassParameter(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
-		std::cout << "DLL passed ok\n";
-	}
-	else {
-		std::cout << "DLL passed fail\n";
-	}
-
-    ResumeThread(pi.hThread);
-
-    std::cout << "Proc resumed.\n";
-
-	DWORD dw = WaitForSingleObject(pi.hProcess, INFINITE);
-
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
-
     return 0;
 }

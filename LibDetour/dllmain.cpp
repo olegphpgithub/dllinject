@@ -26,7 +26,6 @@ VOID WINAPI HookedGetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime) {
 }
 
 extern "C" __declspec(dllexport) void AssignSystemTime(const SYSTEMTIME *systime) {
-    std::cout << "From DLL:" << systime->wYear << std::endl;
     spurious_systime = *systime;
 }
 
@@ -37,8 +36,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 {
     if (ul_reason_for_call == DLL_PROCESS_ATTACH)
     {
-        MessageBoxA(NULL, "DLL Injected with Detours!", "Detours Hook", MB_OK);
-
         DetourRestoreAfterWith();
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
