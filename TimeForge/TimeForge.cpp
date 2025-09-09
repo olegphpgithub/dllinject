@@ -44,36 +44,9 @@ bool InjectDLL(DWORD pid, const char* dllPath) {
     return true;
 }
 
+
+
 bool PassParameter(DWORD pid, const char* dllPath)
-{
-	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if (!hProcess) return false;
-
-	const char* param = "some important data";
-	LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, strlen(param) + 1, MEM_COMMIT, PAGE_READWRITE);
-	if (remoteMem == NULL) return false;
-	WriteProcessMemory(hProcess, remoteMem, param, strlen(param) + 1, NULL);
-
-	HMODULE hModule = GetModuleHandleA(dllPath);
-	if (hModule == NULL) {
-		std::cout << "GetModuleHandleA fail 2" << std::endl;
-		return false;
-	}
-
-	LPVOID loadLibraryAddr = GetProcAddress(hModule, "DummyExport");
-	if (!loadLibraryAddr) return false;
-
-    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0,
-                                        (LPTHREAD_START_ROUTINE)loadLibraryAddr,
-                                        remoteMem, 0, NULL);
-    if (!hThread) return false;
-
-	CloseHandle(hThread);
-	CloseHandle(hProcess);
-	return true;
-}
-
-bool PassParameter2(DWORD pid, const char* dllPath)
 {
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess) return false;
@@ -108,14 +81,6 @@ bool PassParameter2(DWORD pid, const char* dllPath)
 
     FreeLibrary(hLocalDLL); // больше не нужен
 
-	//const char* param = "some important data";
-	//LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, strlen(param) + 1, MEM_COMMIT, PAGE_READWRITE);
-	//if (remoteMem == NULL) return false;
-
-    std::cout << "Before pass parameter:" << parser.m_time.wYear << std::endl;
-    std::cout << "sizeof(parser.m_time)" << sizeof(parser.m_time) << std::endl;
-    std::cout << "sizeof(_SYSTEMTIME)" << sizeof(_SYSTEMTIME) << std::endl;
-    std::cout << "sizeof(SYSTEMTIME)" << sizeof(SYSTEMTIME) << std::endl;
     LPVOID remoteMem = VirtualAllocEx(hProcess, NULL, sizeof(parser.m_time), MEM_COMMIT, PAGE_READWRITE);
     if (remoteMem == NULL) return false;
 
@@ -183,7 +148,7 @@ int main(int argc, char *argv[]) {
     else
         std::cout << "Injection failed.\n";
 
-	if (PassParameter2(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
+	if (PassParameter(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
 		std::cout << "DLL passed ok\n";
 	}
 	else {
