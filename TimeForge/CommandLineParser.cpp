@@ -11,7 +11,6 @@
     #include <tr1/regex>  // GCC, Clang
 #endif
 
-#include "getopt.h"
 #include "CLI11.hpp"
 
 bool CommandLineParser::Parse(int argc, char* argv[])
