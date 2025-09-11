@@ -110,8 +110,6 @@ int main(int argc, char *argv[]) {
         STARTUPINFOA si = { sizeof(si) };
         PROCESS_INFORMATION pi = {};
 
-        // LPCSTR appPath = "d:\\nnRus.Git\\dllinject\\Release\\Victim.exe";
-
         std::stringstream cmdlinestream;
 
         std::string border = parser.target_application.find(' ') != std::string::npos ? "\"" : "";
@@ -146,7 +144,6 @@ int main(int argc, char *argv[]) {
 
         ResourceFile Dll;
 
-        // if (InjectDLL(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
         if (InjectDLL(pi.dwProcessId, Dll.file_path.c_str())) {
             std::cout << "DLL successfully injected!\n";
         }
@@ -154,7 +151,6 @@ int main(int argc, char *argv[]) {
             std::cout << "Injection failed.\n";
         }
 
-        // if (PassParameter(pi.dwProcessId, "d:\\nnRus.Git\\dllinject\\Release\\LibDetour.dll")) {
         if (PassParameter(pi.dwProcessId, Dll.file_path.c_str())) {
             std::cout << "DLL passed ok\n";
         }
